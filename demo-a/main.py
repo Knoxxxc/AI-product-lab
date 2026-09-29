@@ -114,6 +114,14 @@ def create_analysis_template(question):
 question = input("请输入客户需求：")
 result = create_analysis_template(question)
 
+if result["followup_questions"]:
+    for followup_question in result["followup_questions"]:
+        answer = input(followup_question + "：")
+        question = question + "\n补充问题：" + followup_question
+        question = question + "\n客户回答：" + answer
+
+    result = create_analysis_template(question)
+
 print("客户原始需求：", result["customer_input"])
 print("行业：", result["industry"])
 print("行业置信度：", result["industry_confidence"])
