@@ -3,6 +3,7 @@ import requests
 
 
 CONFIDENCE_THRESHOLD = 0.75
+MAX_FOLLOWUP_ROUNDS = 3
 
 
 def analyze_with_jev(question):
@@ -55,7 +56,7 @@ def analyze_with_jev(question):
         url,
         headers=headers,
         json=payload,
-        timeout=30
+        timeout=60
     )
 
     response.raise_for_status()
@@ -114,11 +115,21 @@ def create_analysis_template(question):
 question = input("请输入客户需求：")
 result = create_analysis_template(question)
 
-if result["followup_questions"]:
+followup_round = 0
+
+while (
+    result["followup_questions"]
+    and followup_round < MAX_FOLLOWUP_ROUNDS
+):
+    followup_round += 1
+
+    print("正在进行第", followup_round, "轮需求确认")
+
     for followup_question in result["followup_questions"]:
         answer = input(followup_question + "：")
-        question = question + "\n补充问题：" + followup_question
-        question = question + "\n客户回答：" + answer
+
+        question += "\n补充问题：" + followup_question
+        question += "\n客户回答：" + answer
 
     result = create_analysis_template(question)
 
@@ -129,3 +140,8 @@ print("需求类型：", result["requirement_type"])
 print("需求类型置信度：", result["requirement_confidence"])
 print("待确认信息：", result["unknowns"])
 print("建议追问：", result["followup_questions"])
+
+if result["followup_questions"]:
+    print("已经达到最大追问轮数，需要人工继续确认。")
+else:
+    print("需求分类确认完成。")
