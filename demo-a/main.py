@@ -48,23 +48,49 @@ def analyze_with_jev(question):
             }
         }
     }
-
     session = requests.Session()
     session.trust_env = False
 
-    response = session.post(
-        url,
-        headers=headers,
-        json=payload,
-        timeout=60
-    )
+    try:
+        response = session.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
 
-    response.raise_for_status()
+        response.raise_for_status()
+
+    except requests.exceptions.Timeout:
+        print("Jev 响应超时，请稍后重新运行。")
+        raise SystemExit
+
+    except requests.exceptions.ConnectionError:
+        print("无法连接 Jev，请检查网络或代理。")
+        raise SystemExit
+
+    except requests.exceptions.HTTPError as error:
+        status_code = error.response.status_code
+
+        if status_code == 401:
+            print("Jev API Key 无效或没有正确载入。")
+        elif status_code == 422:
+            print("发送给 Jev 的请求格式有误。")
+        elif status_code == 429:
+            print("Jev 请求过于频繁，请稍后重试。")
+        elif status_code == 529:
+            print("Jev 服务当前繁忙，请稍后重试。")
+        else:
+            print("Jev API 请求失败，状态码：", status_code)
+
+        raise SystemExit
+
+    except requests.exceptions.RequestException as error:
+        print("调用 Jev 时发生未知网络错误：", error)
+        raise SystemExit
 
     data = response.json()
-
     return data["answers"]
-
 
 def create_analysis_template(question):
     answers = analyze_with_jev(question)
