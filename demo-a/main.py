@@ -117,7 +117,7 @@ def create_analysis_template(question):
     ):
         unknowns.append("具体需求类型")
         followup_questions.append(
-            "您希望解决什么具体问题，或者自动化什么工作流程？"
+            "您希望解决什么具体问题，或者改进什么工作流程？"
         )
 
     analysis = {
@@ -126,9 +126,13 @@ def create_analysis_template(question):
         "industry_confidence": industry_confidence,
         "requirement_type": requirement_type,
         "requirement_confidence": requirement_confidence,
-        "business_goal": "待分析",
-        "pain_points": [],
-        "constraints": [],
+        "business_goal": "待确认",
+        "current_process": "待确认",
+        "pain_points": "待确认",
+        "target_users": "待确认",
+        "data_sources": "待确认",
+        "constraints": "待确认",
+        "expected_outcome": "待确认",
         "unknowns": unknowns,
         "followup_questions": followup_questions,
         "initial_solution": "待分析",
@@ -136,6 +140,29 @@ def create_analysis_template(question):
     }
 
     return analysis
+
+def collect_requirement_details():
+    detail_questions = {
+        "business_goal": "您希望最终实现什么业务目标？",
+        "current_process": "目前这项工作是如何完成的？",
+        "pain_points": "当前最主要的问题或痛点是什么？",
+        "target_users": "这个系统主要由哪些人使用？",
+        "data_sources": "需要使用哪些数据、资料或系统？",
+        "constraints": "项目有哪些时间、预算、安全或系统限制？",
+        "expected_outcome": "您希望最终看到什么结果或指标改善？"
+    }
+
+    details = {}
+
+    for field_name, prompt in detail_questions.items():
+        answer = input(prompt + "：").strip()
+
+        if answer:
+            details[field_name] = answer
+        else:
+            details[field_name] = "待确认"
+
+    return details
 
 
 question = input("请输入客户需求：")
@@ -164,10 +191,23 @@ print("行业：", result["industry"])
 print("行业置信度：", result["industry_confidence"])
 print("需求类型：", result["requirement_type"])
 print("需求类型置信度：", result["requirement_confidence"])
-print("待确认信息：", result["unknowns"])
-print("建议追问：", result["followup_questions"])
 
 if result["followup_questions"]:
+    print("待确认信息：", result["unknowns"])
+    print("建议追问：", result["followup_questions"])
     print("已经达到最大追问轮数，需要人工继续确认。")
+
 else:
-    print("需求分类确认完成。")
+    print("需求分类确认完成，现在收集详细业务信息。")
+
+    details = collect_requirement_details()
+    result.update(details)
+
+    print("\n完整需求分析")
+    print("业务目标：", result["business_goal"])
+    print("当前流程：", result["current_process"])
+    print("核心痛点：", result["pain_points"])
+    print("目标用户：", result["target_users"])
+    print("数据来源：", result["data_sources"])
+    print("限制条件：", result["constraints"])
+    print("期望结果：", result["expected_outcome"])
